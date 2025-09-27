@@ -23,12 +23,10 @@ impl Queue {
 
     pub fn rm(&mut self) -> Option<(String, i32)> {
         let mut curr = self.node.as_mut()?;
-        // إلا كان غير واحد فالطابور
         if curr.next_person.is_none() {
             let p = self.node.take().unwrap();
             return Some((p.name, p.discount));
         }
-        // نمشيو حتى نوصلو للي قبل لآخر
         while curr.next_person.as_mut()?.next_person.is_some() {
             curr = curr.next_person.as_mut().unwrap();
         }
