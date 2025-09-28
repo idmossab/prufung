@@ -1,9 +1,10 @@
 #[derive(Debug, Clone)]
 pub struct Queue {
     pub node: Link,
+    pub v:Vec<Person>
 }
 
-pub type Link = Option<Box<Person>>;
+pub type Link =Option<Box<Person>>;
 
 #[derive(Debug, Clone)]
 pub struct Person {
@@ -14,44 +15,54 @@ pub struct Person {
 
 impl Queue {
     pub fn new() -> Queue {
-        Queue { node: None }
+        Queue {
+             node: None,
+             v:Vec::new()
+        }
     }
 
+   pub fn hilper(&mut self){
+        let mut link :Link=None;
+        for per in self.v.iter().rev(){
+            link=Some(Box::new(
+                Person {
+                     name: per.name.clone(),
+                     discount: per.discount,
+                     next_person: link,
+                }   
+            ));
+        }
+        self.node=link
+   }
+
     pub fn add(&mut self, name: String, discount: i32) {
-        self.node = Some(Box::new(Person { name, discount, next_person: self.node.take() }));
+        self.v.insert(0, Person {
+            name,
+            discount,
+            next_person: None,
+        });
+        self.hilper();
+    }
+
+    pub fn invert_queue(&mut self) {
+        self.v.reverse();
+        self.hilper();
     }
 
     pub fn rm(&mut self) -> Option<(String, i32)> {
-        let mut curr = self.node.as_mut()?;
-        if curr.next_person.is_none() {
-            let p = self.node.take().unwrap();
-            return Some((p.name, p.discount));
-        }
-        while curr.next_person.as_mut()?.next_person.is_some() {
-            curr = curr.next_person.as_mut().unwrap();
-        }
-        let last = curr.next_person.take().unwrap();
-        Some((last.name, last.discount))
-    }
-
-    pub fn search(&self, name: &str) -> Option<(&String, &i32)> {
-        let mut curr = self.node.as_ref();
-        while let Some(person) = curr {
-            if person.name == name {
-                return Some((&person.name, &person.discount));
-            }
-            curr = person.next_person.as_ref();
+        if let Some(p)=self.v.pop(){
+            self.hilper();
+            return Some((p.name,p.discount));
         }
         None
     }
 
-    pub fn invert_queue(&mut self) {
-        let (mut prev, mut curr) = (None, self.node.take());
-        while let Some(mut person) = curr {
-            curr = person.next_person.take();
-            person.next_person = prev;
-            prev = Some(person);
+    pub fn search(&self, name: &str) -> Option<(&String, &i32)> {
+        for per in &self.v{
+            if per.name ==name{
+                return Some((&per.name,&per.discount))
+            }
         }
-        self.node = prev;
+        None
     }
 }
